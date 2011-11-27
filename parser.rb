@@ -23,13 +23,13 @@ DataMapper.auto_migrate!
 def hypemsearch
       "Starting search..."
       url = "http://hypem.com/playlist/popular/3day/json/1/data.js"
-      resp = Net::HTTP.get_response(URI.parse(url))
-      data = resp.body
+      request = Net::HTTP.get_response(URI.parse(url))
+      response = resp.body
       "Found Hype Machine feed..."
 
-      result = JSON.parse(data)
+      json = JSON.parse(response)
 
-      @r = Dataset.new
+      r = Dataset.new
       @r.data = data
       @r.date = Time.now
       @r.save
