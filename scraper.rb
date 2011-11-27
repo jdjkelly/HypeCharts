@@ -5,7 +5,11 @@ require 'json'
 require 'mp3info'
 require 'fileutils'
 
-p "Starting this bitch up..."
+# Some constants
+$debug = false
+$time = Time.new
+
+p "Let's get musical."
 
 # Create new connection object and grab the AUTH cookie. This is how Hypem validates the keys it generates.
 conn = Net::HTTP.new('hypem.com', 80)
@@ -43,31 +47,35 @@ getids.each_with_index do |item, index|
 	end
 end
 
+dir_name = $time.strftime('%Y%m%e')
+already_ran = File.directory? dir_name
+
 # This is where the magic happens
-for i in (0..9)
-	url = "/serve/source/" + ids[i] + "/" + keys[i]
-	request = conn.get(url, headers)
-	response = request.body
-	json_obj = JSON.parse(response, {'symbolize_names' => true})
-	mp3_url = json_obj["url"]
-  	
-  	# Save File
-	filename = i.to_s + ".mp3"
-	writeOut = open(filename, "wb")
-	  	writeOut.write(open(mp3_url).read)
-	writeOut.close
+unless $debug || already_ran == true
+	new_dir = FileUtils.mkdir dir_name
+	for i in (0..9) 
+		url = "/serve/source/" + ids[i] + "/" + keys[i]
+		request = conn.get(url, headers)
+		response = request.body
+		json_obj = JSON.parse(response, {'symbolize_names' => true})
+		mp3_url = json_obj["url"]
 
-	# Rewrite file name
-  	Mp3Info.open(filename) do |mp3|
-    	title = mp3.tag.title 
-    	artist = mp3.tag.artist
-    	p "Downloading: " + title + " - " + artist + "..."
-    	new_filename = '0' + (i + 1).to_s + ' ' + artist + ' - ' + title + '.mp3'
-    	File.rename(filename, new_filename ) 
-    	p "Done."
+	  	# Save File
+		filename = i.to_s + ".mp3"
+		writeOut = open(dir_name + '/' + filename, "wb")
+		  	writeOut.write(open(mp3_url).read)
+		writeOut.close
+
+		# Rewrite file name
+	  	Mp3Info.open(dir_name + '/' + filename) do |mp3|
+	    	title = mp3.tag.title 
+	    	artist = mp3.tag.artist
+	    	p "Downloading: " + title + " - " + artist + "..."
+	    	new_filename = '0' + (i + 1).to_s + ' ' + artist + ' - ' + title + '.mp3'
+	    	File.rename(dir_name + '/' + filename, dir_name + '/' + new_filename ) 
+	    	p "Done."
+		end
 	end
-
-
+else
+	p "Already ran today!"
 end
-
-
