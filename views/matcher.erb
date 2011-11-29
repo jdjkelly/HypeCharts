@@ -1,13 +1,18 @@
-<html>
-	<head>
-		<title>Matcher!</title>
-	</head>
-
-	<body>
-		<h1>Title!</h1>
-		
-		<%= sorted %>
-
-	</body>
-
-</html>
+<div class="row">
+          <div class="span10">
+            <h2>Today</h2>
+            <ol>
+            	<% @sorted.each do |blog, count, siteid| %>
+					<li><%= blog %> - <%= count %></li>
+				<% end %>
+            </ol>
+          </div>
+          <div class="span4">
+          	<ul>
+          		<li><a href="#today">Today</a></li>
+          		<li><a href="#today">This Week</a></li>
+          		<li><a href="#today">This Month</a></li>
+          		<li><a href="#today">This Year</a></li>
+          </div>
+          
+        </div>
