@@ -2,10 +2,9 @@
 require 'net/http'
 require 'open-uri'
 require 'json'
-require 'mp3info'
 require 'fileutils'
 
-# Some constants
+# Some constants 
 $debug = false
 $time = Time.new
 
@@ -30,7 +29,7 @@ regex_input.scan(/\w{32}/) { |match|
 }
 
 # Now we have to get the song ids. In the future, maybe I should scrape them from the same source as the keys - when I get better at ruby regex's.
-def getids 
+def popular_list
 	feed = "http://hypem.com/playlist/popular/3day/json/1/data.js"
 	request = Net::HTTP.get_response(URI.parse(feed))
 	response = request.body
@@ -38,12 +37,17 @@ def getids
 	return json_parse
 end
 
-# We iterate through the objects returned by getids, and put the responses into an id array
+# We iterate through the objects returned by popular_list, and put the responses into an id array
 ids = Array.new
-getids.each_with_index do |item, index|
+artists = Array.new
+titles = Array.new
+
+popular_list.each_with_index do |item, index|
 	# The first part of the object is a version identifier, so we'll skip it.
 	if index > 0
 		ids << item[1]["mediaid"]
+		artists << item[1]["artist"]
+		titles << item[1]["title"]
 	end
 end
 
@@ -52,37 +56,36 @@ already_ran = File.directory? dir_name
 
 # This is where the magic happens
 unless $debug || already_ran == true
-	new_dir = FileUtils.mkdir dir_name
+	#new_dir = FileUtils.mkdir dir_name
 	for i in (0..9) 
 		url = "/serve/source/" + ids[i] + "/" + keys[i]
 		request = conn.get(url, headers)
 		response = request.body
 		json_obj = JSON.parse(response, {'symbolize_names' => true})
 		mp3_url = json_obj["url"]
+		artist = artists[i]
+		title = titles[i]
+
+		# Handles the case of an artist with a '/' This should probably be abstracted into a method and checked against the whole string, along with additional characters.
+
+		while artist.include? '/'
+			slash = artist.index( '/' )
+			artist[slash] = ''
+		end
+		while title.include? '/'
+			slash = title.index( '/' )
+			title[slash] = ''
+		end
+
+		p "Downloading: " + title + " - " + artist + "..."
 
 	  	# Save File
-		filename = i.to_s + ".mp3"
+		filename = '0' + (i + 1).to_s + ' ' + artist + ' - ' + title + '.mp3'
 
-		# parse out bad chars
-		while filename.include? '/'
-			slash = filename.index '/'
-			filename[slash] = ''
-		end
-
-		writeOut = open(dir_name + '/' + filename, "wb")
+		writeOut = open(dir_name + '/' + filename, 'wb')
 		  	writeOut.write(open(mp3_url).read)
 		writeOut.close
-
-		# Rewrite file name
-	  	Mp3Info.open(dir_name + '/' + filename) do |mp3|
-	    	title = mp3.tag.title 
-	    	artist = mp3.tag.artist
-	    	p "Downloading: " + title + " - " + artist + "..."
-	    	new_filename = '0' + (i + 1).to_s + ' ' + artist + ' - ' + title + '.mp3'
-	    	File.rename(dir_name + '/' + filename, dir_name + '/' + new_filename ) 
-	    	p "Done."
-		end
 	end
 else
-	p "Already ran today!"
+	p "Already ran!"
 end
