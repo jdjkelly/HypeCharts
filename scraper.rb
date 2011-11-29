@@ -62,6 +62,13 @@ unless $debug || already_ran == true
 
 	  	# Save File
 		filename = i.to_s + ".mp3"
+
+		# parse out bad chars
+		while filename.include? '/'
+			slash = filename.index '/'
+			filename[slash] = ''
+		end
+
 		writeOut = open(dir_name + '/' + filename, "wb")
 		  	writeOut.write(open(mp3_url).read)
 		writeOut.close
