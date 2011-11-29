@@ -56,7 +56,7 @@ already_ran = File.directory? dir_name
 
 # This is where the magic happens
 unless $debug || already_ran == true
-	#new_dir = FileUtils.mkdir dir_name
+	new_dir = FileUtils.mkdir dir_name
 	for i in (0..9) 
 		url = "/serve/source/" + ids[i] + "/" + keys[i]
 		request = conn.get(url, headers)
