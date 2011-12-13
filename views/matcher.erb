@@ -1,10 +1,12 @@
-<div class="row">
+        <div class="row">
           <div class="span10">
             <h2>Today</h2>
             <ol>
-            	<% @sorted.each do |blog, count, siteid| %>
-					<li><%= blog %> - <%= count %></li>
-				<% end %>
+              <% @sorted.each do |blog, count, siteid| %>
+					      <li><%= blog %> - <%= count %></li>
+                <div class="blog">
+                </div>
+				      <% end %>
             </ol>
           </div>
           <div class="span4">
@@ -13,6 +15,7 @@
           		<li><a href="#today">This Week</a></li>
           		<li><a href="#today">This Month</a></li>
           		<li><a href="#today">This Year</a></li>
+            </ul>
           </div>
           
         </div>
