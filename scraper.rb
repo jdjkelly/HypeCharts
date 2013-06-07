@@ -4,7 +4,7 @@ require 'open-uri'
 require 'json'
 require 'fileutils'
 
-# Some constants 
+# Some constants
 $debug = false
 $time = Time.new
 
@@ -16,21 +16,29 @@ response = conn.get('/')
 cookie = response.response['set-cookie']
 
 # Headers need to be in a hash.
-headers = {	'User-Agent' => 'Mozilla/5.0 (Windows NT 6.1; rv:1.9) Gecko/20100101 Firefox/4.0', 'Cookie' => cookie }
+headers = {	'User-Agent' => 'Mozilla/5.0 (Windows NT 6.1; rv:2.0) Gecko/20100101 Firefox/4.0', 'Cookie' => cookie }
 
 # Get the data from hypem
-response = conn.get('/popular', headers)
+response = if ARGV[0]
+	conn.get("/playlist/loved/#{ARGV[0]}", headers)
+else
+	conn.get("/popular", headers)
+end
 
 # Convert resposne to string, use String#scan to scan text, iterating through the matches. Keys are uniquely generated when your browser actually visits hypem.
 regex_input = response.body.to_s
 keys = Array.new
-regex_input.scan(/\w{32}/) { |match| 
+regex_input.scan(/\w{32}/) { |match|
   keys << match
 }
 
 # Now we have to get the song ids. In the future, maybe I should scrape them from the same source as the keys - when I get better at ruby regex's.
 def popular_list
-	feed = "http://hypem.com/playlist/popular/3day/json/1/data.js"
+	feed = if ARGV[0]
+		"http://hypem.com/playlist/loved/#{ARGV[0]}/json/1/data.js"
+	else
+		"http://hypem.com/playlist/popular/3day/json/1/data.js"
+	end
 	request = Net::HTTP.get_response(URI.parse(feed))
 	response = request.body
 	json_parse = JSON.parse(response, {'symbolize_names' => true})
@@ -57,7 +65,7 @@ already_ran = File.directory? dir_name
 # This is where the magic happens
 unless $debug || already_ran == true
 	new_dir = FileUtils.mkdir dir_name
-	for i in (0..9) 
+	for i in (0..18)
 		url = "/serve/source/" + ids[i] + "/" + keys[i]
 		request = conn.get(url, headers)
 		response = request.body
